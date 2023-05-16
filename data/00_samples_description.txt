@@ -1,0 +1,28 @@
+There are two data in each dataset, which are the raw responses ('raw_meps') and preprocessed MEP ('meps').
+Inter-trial intervals are random among 4-6 s.
+
+1. coil_orient_FDI_resp.mat
+	+ Paradigm: single-pulse TMS
+	+ Target muscle: right FDI
+	+ Stimulation protocol: 120 single pulses at 120% rTMS. The coil was rotated from -135 degree to 135 degree about the pre-defined optimal coil orientation.
+	+ The coil orientation ('coil_info') is provided along with 'raw_meps' and 'meps'.
+
+2. LICI_TA_resp.mat
+	+ Paradigm: long-interval cortical inhibition (LICI)
+	+ Target muscle: right TA
+	+ Stimulation protocol: 20 bursts, each contains 2 pulses at 120% rTMS, 100 ms apart.
+
+3. RS_TA_resp.mat
+	+ Paradigm: repetitive suppression (RS)
+	+ Target muscle: right TA
+	+ Stimulation protocol: 20 bursts, each contains 4 pulses at 120% rTMS, 1 s apart.
+
+4,5,6. SICF14_TA_resp.mat, SICF30_TA_resp.mat, SICF70_TA_resp.mat
+	+ Paradigm: short-interval intra-cortical facilitation (SICF)
+	+ Target muscle: right TA
+	+ Stimulation protocol: 20 bursts. Each contains 2 pulses at 120% rTMS, and 1.4, 3.0 and 7.0 ms apart, respectively.
+
+7. single_pulse_TA_resp.mat
+	+ Paradigm: single-pulse TMS
+	+ Target muscle: right TA
+	+ Stimulation protocol: 20 single pulses at 120% rTMS
