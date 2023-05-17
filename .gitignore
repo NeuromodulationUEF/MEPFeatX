@@ -1,0 +1,23 @@
+# analysis folder
+analysis_*/
+
+# reference folder
+reference/
+
+#data folder
+data/
+
+# .mat file
+*.mat
+
+# figures
+*.png
+
+#text files such as logs
+*.txt
+
+# Windows default autosave extension
+*.asv
+
+# OSX / *nix default autosave extension
+*.m~
