@@ -33,8 +33,7 @@ config.path_dataRef = [dir_root 'reference\data\'];
 config.path_featureRef = [dir_root 'reference\analysis\features\'];
 %% Locate the specific metadata files 
 config.latency_threshold = [dir_root 'data\latency_threshold.xlsx'];
-config.file_info = [dir_root 'data\file_info.xlsx'];
-config.metadata = [dir_root 'data\metadata.xlsx'];
+config.metadata = [dir_root 'data\metadata_table.xlsx'];
 %% Configure the  
 config.plotIt = 0;
 config.runParallel = 1;

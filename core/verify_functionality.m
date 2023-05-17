@@ -20,21 +20,15 @@ disp('--- Verifying the MEPFeatureExtraction toolbox ...')
 config = make_config(dir_root);
 dataRef_list = dir([config.path_dataRef, '*.mat']);
 onset_table = readtable([config.path_dataRef, 'latency_threshold.xlsx'], 'ReadRowNames',true);
-file_info = readtable([config.path_dataRef, 'file_info.xlsx']);
-metadata = readtable([config.path_dataRef, 'metadata.xlsx']);
+metadata = readtable([config.path_dataRef, 'metadata_table.xlsx']);
  %%
 for k = 1:length(dataRef_list)
     disp(repmat('=', 1, 100))
     file_name = dataRef_list(k).name;
     disp(file_name)
 
-    cur_file_info_index = contains(file_info.MEPs, file_name);
-    cur_ID = file_info.ID{cur_file_info_index};
-    cur_session = file_info.Session(cur_file_info_index);
-    cur_hemis = file_info.Hemis{cur_file_info_index};
-
     % load metadata of the session
-    cur_metadata = metadata(contains(metadata.ID, cur_ID),:);
+    cur_metadata = metadata(contains(metadata.MEPs, file_name),:);
     
     % base on metadata to get threshold value
     config.thresholds = get_threshold_value(onset_table, cur_metadata.AgeGroup, cur_metadata.Muscle, config.fs);

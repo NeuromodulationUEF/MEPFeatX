@@ -8,32 +8,24 @@
 
 
 %%
-features_list = dir([config.path_features, '*_features.mat']);
-file_info = readtable(config.file_info);
+features_list = struct2table(dir([config.path_features, '*_features.mat']));
 metadata = readtable(config.metadata);
 
 features_table = table;
-for k = 1:length(features_list)
-    cur_feature_file = features_list(k).name;
+metadata2 = metadata;
+
+for k = 1:height(features_list)
+    cur_feature_file = features_list.name{k};
     load([config.path_features cur_feature_file], "all_ft", "isWrong")
-
     file_name = replace(cur_feature_file, '_features.mat', '');
-    
-    % mapping to the correct file information
-    cur_file_info_index = contains(file_info.MEPs, file_name);
-    cur_ID = file_info.ID{cur_file_info_index};
-    cur_session = file_info.Session(cur_file_info_index);
-    cur_hemis = file_info.Hemis{cur_file_info_index};
-
+       
     % load metadata of the session
-    cur_metadata = metadata(contains(metadata.ID, cur_ID),:);
-    cur_table = repmat(cur_metadata, size(all_ft,1), 1);
-    % create metadata columns
-    cur_table.ID = repmat(cur_ID, size(all_ft,1), 1);
-    cur_table.Session = repmat(cur_session, size(all_ft,1), 1);
-    cur_table.Hemis = repmat(cur_hemis, size(all_ft,1), 1);
+    cur_metadata = metadata(contains(metadata.MEPs, file_name),:);
+    metadata2.Excluded{contains(metadata.MEPs, file_name)} = sprintf('%i,', find(isWrong));
 
-    cur_table = [cur_table array2table(all_ft, "VariableNames", config.features)];
+    cur_table = [repmat(cur_metadata, size(all_ft,1), 1) ...
+        array2table(all_ft, "VariableNames", config.features)];
+
     features_table = [features_table; cur_table];
 end
 
@@ -54,9 +46,11 @@ features_table.timeDiff(invalid_amp) = NaN;
 features_table.ampRatio(invalid_amp) = NaN;
 
 writetable(features_table, [config.path_stat 'features_table.xlsx'])
-
+writetable(metadata, config.metadata)
 disp(['Feature table is created and save to ' config.path_stat])
+disp(['Metadata table is now updated with excluded MEPs: ' config.metadata])
 
 missed_trials = sum(features_table.Amplitude == 0 | isnan(features_table.Amplitude));
 fprintf('Percent of missed trials: %d/%d = %.2f%% \n', ...
     missed_trials, height(features_table), missed_trials/height(features_table)*100)
+

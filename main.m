@@ -26,12 +26,12 @@ close all;
 clear 
 
 % Define working folder
-dir_root = 'D:\MEPanalyzer\';
+dir_root = 'D:\MEPFeatX\';
 cd(dir_root)
 addpath([dir_root 'core\'])
 addpath([dir_root 'use_cases\'])
 
-% Create configuration var
+%% Customize configuration parameters
 time_now = char(datetime('now', 'Format', 'yyyyMMdd_HHmmSS'));
 config = make_config(dir_root);
 
@@ -41,56 +41,44 @@ diary([config.path_ref 'verifying_MEPFeatX_' time_now '.txt'])
 verify_functionality
 diary off
 
-%% Run one dataset
-% config = make_config(dir_root);
-% config.plotIt = 1;
-% 
-% % mapping to the correct file information
-% cur_file_info_index = contains(file_info.MEPs, file_name);
-% cur_ID = file_info.ID{cur_file_info_index};
-% cur_session = file_info.Session(cur_file_info_index);
-% cur_hemis = file_info.Hemis{cur_file_info_index};
-% 
-% % load metadata of the session
-% cur_metadata = metadata(contains(metadata.ID, cur_ID),:);
-% 
-% % base on metadata to get threshold value
-% config.thresholds = get_threshold_value(onset_table, cur_metadata.AgeGroup, cur_metadata.Muscle, config.fs);
-% 
-% file_name = 'ID10_2.mat';
-% extract_features(config, file_name)
-
-%% Run all use cases
-
-% Comment if not plotting figures
-% config.plotIt = 1;
-
-% List all response .mat files in data path
-resp_list = struct2table(dir([config.path_data '*.mat']));
+%% Load onset threshold table and metadata table
 onset_table = readtable(config.latency_threshold, 'ReadRowNames',true);
-file_info = readtable(config.file_info);
 metadata = readtable(config.metadata);
+
+%% Run one dataset
+% if 1, plot all MEP figures
+config.plotIt = 1;
+
+file_name = 'ID10_2.mat';
+cur_metadata = metadata(contains(metadata.MEPs, file_name),:);
+
+% base on metadata to get threshold value
+config.thresholds = get_threshold_value(onset_table, cur_metadata.AgeGroup, cur_metadata.Muscle, config.fs);
+
+extract_features(config, file_name)
+
+%% Run all datasets listed in metadata table
 
 diary([config.path_log 'MEPFeatX_CO_analysis_' time_now '.txt'])
 tic
-% for k = 1:height(resp_list)
-parfor k = 1:height(resp_list)
-    config = make_config(dir_root);
-    config.plotIt = 1;
+
+for k = 1:height(metadata)
+% parfor k = 1:height(resp_list)
+%     config = make_config(dir_root);
+%     config.plotIt = 1;
+
+    % load metadata of the dataset
+    cur_metadata = metadata(k,:);
 
     disp(repmat('=', 1, 100))
-    file_name = resp_list.name{k};
-    disp(file_name)
-    
-    % mapping to the correct file information
-    cur_file_info_index = contains(file_info.MEPs, file_name);
-    cur_ID = file_info.ID{cur_file_info_index};
-    cur_session = file_info.Session(cur_file_info_index);
-    cur_hemis = file_info.Hemis{cur_file_info_index};
+    file_name = cur_metadata.MEPs{:};
+    if isempty(file_name)
+        disp('No available information on the current dataset')
+        continue
+    end
 
-    % load metadata of the session
-    cur_metadata = metadata(contains(metadata.ID, cur_ID),:);
-    
+    disp(file_name)
+      
     % base on metadata to get threshold value
     config.thresholds = get_threshold_value(onset_table, cur_metadata.AgeGroup, cur_metadata.Muscle, config.fs);
 
@@ -104,7 +92,7 @@ parfor k = 1:height(resp_list)
         extract_features_RS(config, file_name)
     elseif contains(cur_metadata.Protocol, "SICF")
         extract_features_SICF(config, file_name)    
-    elseif contains(cur_metadata.Protocol, "120% rMT")
+    elseif contains(cur_metadata.Protocol, "Stimulus_response")
         extract_features_singlePulse(config, file_name)
     else
         extract_features(config, file_name)
@@ -116,14 +104,14 @@ disp(repmat('=', 1, 100))
 disp('Create a table for MEP features')
 create_feature_table
 
+disp(repmat('=', 1, 100))
+toc
+diary off
+
+%% Plot feature boxplots for each subcategory
 disp('Plot feature boxplots')
 plot_feature_boxplots(config, 'Session')
 plot_feature_boxplots(config, 'Muscle')
 plot_feature_boxplots(config, 'SequenceType')
-
-%% Example of plotting boxplots for each features
-disp(repmat('=', 1, 100))
-toc
-diary off
 
 

@@ -2,10 +2,10 @@
 analysis_*/
 
 # reference folder
-reference/
+# reference/
 
-#data folder
-data/
+# data folder
+# data/
 
 # .mat file
 *.mat

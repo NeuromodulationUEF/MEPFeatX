@@ -18,6 +18,11 @@ function extract_features_LICI(config, file_name)
 
 
 %% Load the mep file
+if ~exist([config.path_data file_name], 'file')
+    disp(['Could not find or open ' config.path_data file_name])
+    return
+end
+
 load([config.path_data file_name], "meps", "raw_meps")
 if ~exist("raw_meps", "var")
     raw_meps = NaN(size(meps));
