@@ -1,4 +1,4 @@
-function thresholds = get_threshold_value(onset_table, sbj, muscle, fs)
+function config = get_threshold_value(onset_table, sbj, muscle, config)
 %% Description
 % get_threshold_value calculate the thresholds for the current dataset.
 %
@@ -39,15 +39,15 @@ else
 end
 
 if contains(muscle, "TA")
-    thresholds.t = -50:1/fs:150; % time vector from -50ms to 150ms
+    config.thresholds.t = -50:1/config.fs:150; % time vector from -50ms to 150ms
 else
-    thresholds.t = -50:1/fs:100; % time vector from -50ms to 100ms
+    config.thresholds.t = -50:1/config.fs:100; % time vector from -50ms to 100ms
 end
 
-thresholds.amp_min = 50; % minimum MEP amplitude
-thresholds.t_background = [-40, -5]; % background to calculate background signal
+config.thresholds.amp_min = 50; % minimum MEP amplitude
+config.thresholds.t_background = [-40, -5]; % background to calculate background signal
 
-thresholds.t_onset = t_onset; % time window for MEP onset
-thresholds.t_end_point = [t_onset(1) + 8, t_onset(1) + 60]; % range for end-points of MEP in ms
-thresholds.t_first_peak = t_onset(1) + 2; % earliest time-point of the first major peak
+config.thresholds.t_onset = t_onset; % time window for MEP onset
+config.thresholds.t_end_point = [t_onset(1) + 8, t_onset(1) + 60]; % range for end-points of MEP in ms
+config.thresholds.t_first_peak = t_onset(1) + 2; % earliest time-point of the first major peak
 

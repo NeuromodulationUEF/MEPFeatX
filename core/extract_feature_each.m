@@ -1,7 +1,7 @@
 function [features, turns_info] = extract_feature_each(m, t, y, raw_y, thresholds, plotIt, plotOpt)
 %% Description
 % extract_feature_each extract features from an individual MEP.
-% 
+%
 % For more detail in extraction algorithm, please check the related
 % publication.
 %
@@ -58,7 +58,7 @@ if t2t - t1t < 0
     iy = -iy;
     y_roi_abs = iy(roi_peaks);
     [t1a, t1_index] = max(y_roi_abs);
-
+    
     t1t = t_roi(t1_index);
     [t2a, t2_index] = min(y_roi_abs);
     t2t = t_roi(t2_index);
@@ -70,11 +70,11 @@ p2p = abs(t1a) + abs(t2a);
 % Return if
 % - MEP amplitude is less than 50,
 % - Baseline is noisy
-% - The first peak appears outside of the duration range
+% - Unable to detect prominent peaks inside the given duration range
 if p2p < amp_min || abs(t1a) < baseline_threshold || ...
         baseline_threshold > p2p*0.2 || max(t1t, t2t) > t_end_point(2) || ...
         t1t > t2t || isempty(t2t) || t1t < thresholds.t_first_peak
-    disp([num2str(m) ': failed to extract features'])
+    disp([num2str(m) ': Unable to extract features'])
     return;
 end
 
@@ -135,9 +135,9 @@ features = [p2p, latency, AUC, thickness, nTurns, nPhases, duration];
 
 if plotIt
     % Plot the current response with its features
-
+    
     figure('color', 'w', 'Name', num2str(m), 'Position', [0 0 plotOpt.figure_size]);
-
+    
     hold on;
     plot(t, raw_y, 'g')
     plot(it, iy, 'color', plotOpt.color_MEP_individual);
@@ -145,10 +145,10 @@ if plotIt
     line([it(1) it(end)], [-baseline_threshold -baseline_threshold], 'linestyle','--');
     line([duration_end(1) it(end)], [-sateline_threshold -sateline_threshold], 'linestyle', '-.', 'color', 'b');
     line([duration_end(1) it(end)], [sateline_threshold sateline_threshold], 'linestyle', '-.', 'color', 'b');
-
+    
     line([latency latency], [t1a t2a], 'color', 'r', 'linestyle', '--');
     line([duration_end(1) duration_end(1)], [t1a t2a], 'color', 'b', 'linestyle', '--');
-
+    
     plot(t1t, t1a, 'rv')
     plot(t2t, t2a, 'rv')
     plot(turns(:,1), turns(:,2), 'r*')
@@ -159,7 +159,7 @@ if plotIt
             'Edgecolor', plotOpt.color_MEP_individual);
     end
     hold off
-
+    
     title(num2str(m))
     axis ij; grid minor
     xlabel('Time (ms)'); ylabel('Amplitude (\muV)')

@@ -30,14 +30,13 @@ end
 %% Define directories for evaluation
 config.path_ref = [dir_root 'reference\'];
 config.path_dataRef = [dir_root 'reference\data\'];
-config.path_featureRef = [dir_root 'reference\analysis\features\'];
+config.path_featureRef = [dir_root 'reference\features\'];
 %% Locate the specific metadata files 
-config.latency_threshold = [dir_root 'data\latency_threshold.xlsx'];
+config.onset_threshold = [dir_root 'data\onset_threshold.xlsx'];
 config.metadata = [dir_root 'data\metadata_table.xlsx'];
-%% Configure the  
-config.plotIt = 0;
-config.runParallel = 1;
-
+%% Configure parameters for feature extractions 
+config.plotIt = 0; % if 1, plot MEPs and save these figures
+config.runParallel = 1; % run multi-threading
 config.fs = 3; % sampling frequency in kHz
 
 config.features = ["Amplitude", "Latency", "AUC", "Thickness", ...

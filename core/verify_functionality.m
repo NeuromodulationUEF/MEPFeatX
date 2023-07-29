@@ -14,44 +14,47 @@
 % Copyright (c) 2023, NeuromodulationUEF.
 % Github: https://github.com/NeuromodulationUEF/MEPFeatX
 
-%% 
+%%
 disp('--- Verifying the MEPFeatureExtraction toolbox ...')
 
 config = make_config(dir_root);
-dataRef_list = dir([config.path_dataRef, '*.mat']);
-onset_table = readtable([config.path_dataRef, 'latency_threshold.xlsx'], 'ReadRowNames',true);
+ref_data_list = dir([config.path_dataRef, '*.mat']);
+onset_threshold = readtable([config.path_dataRef, 'onset_threshold.xlsx'], 'ReadRowNames',true);
 metadata = readtable([config.path_dataRef, 'metadata_table.xlsx']);
- %%
-for k = 1:length(dataRef_list)
+%%
+for k = 1:length(ref_data_list)
     disp(repmat('=', 1, 100))
-    file_name = dataRef_list(k).name;
+    file_name = ref_data_list(k).name;
     disp(file_name)
-
+    
     % load metadata of the session
     cur_metadata = metadata(contains(metadata.MEPs, file_name),:);
     
     % base on metadata to get threshold value
-    config.thresholds = get_threshold_value(onset_table, cur_metadata.AgeGroup, cur_metadata.Muscle, config.fs);
-
+    config = get_threshold_value(onset_threshold, ...
+        cur_metadata.AgeGroup, cur_metadata.Muscle, config);
     extract_features(config, file_name)
 end
 
 %%
-features_ref_list = struct2table(dir([config.path_featureRef, '*_features.mat']));
-features_new_list = struct2table(dir([config.path_features, '*_features.mat']));
+ref_ft_list = struct2table(dir([config.path_featureRef, '*_features.csv']));
+new_ft_list = struct2table(dir([config.path_features, '*_features.csv']));
 
-total_difference = NaN(height(features_new_list), 1);
-for k = 1: height(features_new_list)
-    cur_feature_set = features_new_list.name{k};
-    disp(cur_feature_set)
-    features_new = load([config.path_features cur_feature_set], "all_ft");
-    features_new = features_new.all_ft;
-
-    features_ref_file = features_ref_list.name{contains(features_ref_list.name, cur_feature_set)};
-    features_ref = load([config.path_features features_ref_file], "all_ft");
-    features_ref = features_ref.all_ft;
+total_difference = NaN(height(new_ft_list), 1);
+for k = 1: height(new_ft_list)
+    cur_feature_file = new_ft_list.name{k};
+    disp(cur_feature_file)
+    new_ft = readtable([config.path_features cur_feature_file]);
     
-    total_difference(k) = sum(features_new - features_ref, "all", 'omitnan');
+    if contains(cur_feature_file, 'ID07')
+        % ID07 is used for testing only
+        total_difference(k) = 0;
+        continue
+    end
+    ref_ft_file = ref_ft_list.name{contains(ref_ft_list.name, cur_feature_file)};
+    ref_ft = readtable([config.path_features ref_ft_file]);
+    
+    total_difference(k) = sum(abs(table2array(new_ft) - table2array(ref_ft)), "all", 'omitnan');
     disp(['===> Difference in feature value: ' num2str(total_difference(k))])
 end
 
@@ -63,3 +66,8 @@ else
     disp('-x- The new feature sets are different from the reference set.')
     disp('-x- Package functions are not verified.')
 end
+
+for k = 1: height(new_ft_list)
+    delete([new_ft_list.folder{k}, '\', new_ft_list.name{k}])
+end
+clear cur* ref* new* total_difference k file_name metadata onset_table

@@ -26,8 +26,11 @@ if ~exist([config.path_data file_name], 'file')
     return
 end
 
-load([config.path_data file_name], "meps", "raw_meps")
-if ~exist("raw_meps", "var")
+vars_in_file = who('-file', [config.path_data file_name]);
+if ismember("raw_meps", vars_in_file)
+    load([config.path_data file_name], "meps", "raw_meps")
+else
+    load([config.path_data file_name], "meps")
     raw_meps = NaN(size(meps));
 end
 
@@ -80,10 +83,10 @@ if config.plotIt
 end
 
 %% Extract features
-[all_ft, all_turns, isWrong] = extract_feature_all(meps, raw_meps, config);
+all_ft = extract_feature_all(meps, raw_meps, config);
 
-save([config.path_features sequence_name '_features.mat'], ...
-    'all_ft', 'all_turns', "isWrong")
+T = array2table(all_ft, 'VariableNames', config.features);
+writetable(T, [config.path_features sequence_name '_features.csv'])
 
 if config.plotIt
     save_figures(path_figure_current, config.runParallel)

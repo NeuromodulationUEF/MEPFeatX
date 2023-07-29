@@ -29,5 +29,6 @@ for k = 1:length(features_list)
 end
 
 %% Saving figures
-path_stat_boxplots = [config.path_stat 'feature_boxplots\' factor '\'];
+time_now = char(datetime('now', 'Format', 'yyyyMMdd'));
+path_stat_boxplots = [config.path_stat 'feature_boxplots\' time_now '\' factor '\'];
 save_figures(path_stat_boxplots, config.runParallel)
