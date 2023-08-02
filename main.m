@@ -4,6 +4,7 @@
 % visualizes these signals for evaluation.
 %
 % Scientific articles:
+%
 %   (2) D. T. A. Nguyen et al., “Developmental models of motor-evoked
 %   potential features by transcranial magnetic stimulation across age
 %   groups from childhood to adulthood,” Scientific Reports 2023 13:1, vol.
@@ -36,40 +37,52 @@ cd(dir_root)
 addpath([dir_root 'core\'])
 addpath([dir_root 'use_cases\'])
 
-%% Customize configuration parameters
-time_now = char(datetime('now', 'Format', 'yyyyMMdd_HHmmSS'));
-
 %% Verify the toolbox before the first use
 disp(repmat('=', 1, 100))
 config = make_config(dir_root);
+time_now = char(datetime('now', 'Format', 'yyyyMMdd_HHmmSS'));
 diary([config.path_ref 'verifying_MEPFeatX_' time_now '.txt'])
 verify_functionality
 diary off
 
 %% Perform feature extraction on one dataset
+disp(repmat('=', 1, 100))
+disp('Perform feature extraction on one dataset')
+file_name = 'ID09.mat';
+
+time_now = char(datetime('now', 'Format', 'yyyyMMdd_HHmmSS'));
 config = make_config(dir_root);
-diary([config.path_log 'MEPFeatX_CO_analysis_' time_now '.txt'])
+diary([config.path_log 'MEPFeatX_CO_analysis_' file_name(1:end-4) '_' time_now '.txt'])
 tic
 
 % Read onset table and metadata table
 onset_threshold = readtable(config.onset_threshold, 'ReadRowNames',true);
 metadata = readtable(config.metadata);
-%%
-disp(repmat('=', 1, 100))
-disp('Perform feature extraction on one dataset')
-file_name = 'ID07.mat';
+
 cur_metadata = metadata(contains(metadata.MEPs, file_name),:);
 
 % Use the dataset's metadata to get threshold value from onset table
 config = get_threshold_value(onset_threshold, ...
     cur_metadata.AgeGroup, cur_metadata.Muscle, config);
-config.plotIt = 1; % set to 1 to plot all MEP figures
-config.thresholds.t = -50:1/config.fs:150; % time vector from -50ms to 150ms
+% config.plotIt = 1; % set to 1 to plot all MEP figures
+% config.thresholds.t = -50:1/config.fs:150; % ID07 time vector from -50ms to 150ms
 
-extract_features_singlePulse(config, file_name)
+% change the template suitable for the paradigm if needed
+extract_features_RC(config, file_name)
 
+toc
+diary off
 %% Run all datasets listed in metadata table
+time_now = char(datetime('now', 'Format', 'yyyyMMdd_HHmmSS'));
 config = make_config(dir_root);
+diary([config.path_log 'MEPFeatX_CO_analysis_' time_now '.txt'])
+tic
+disp(repmat('=', 1, 100))
+disp('Perform feature extraction on all datasets listed in the metadata table')
+
+% Read onset table and metadata table
+onset_threshold = readtable(config.onset_threshold, 'ReadRowNames',true);
+metadata = readtable(config.metadata);
 
 % for k = 1:height(metadata)
 % Comment the above line and uncomment three following lines to run MEPFeatX in parallel mode    
@@ -93,31 +106,30 @@ parfor k = 1:height(metadata)
     config = get_threshold_value(onset_threshold, ...
         cur_metadata.AgeGroup, cur_metadata.Muscle, config);
 
-    % Run feature extraction on LICI, RS, and single-pulse sequence. Here
-    % we have LICI and RS are plotted according to pulse order in each
-    % burst.
+    % Run feature extraction based on the dataset's paradigm
 
-    if contains(cur_metadata.Protocol, "LICI")
+    if contains(cur_metadata.Paradigm, "LICI")
         extract_features_LICI(config, file_name)
-    elseif contains(cur_metadata.Protocol, "RS")
+    elseif contains(cur_metadata.Paradigm, "RS")
         extract_features_RS(config, file_name)
-    elseif contains(cur_metadata.Protocol, "SICF")
+    elseif contains(cur_metadata.Paradigm, "SICF")
         extract_features_SICF(config, file_name)     
-    elseif contains(cur_metadata.Protocol, "RC")
+    elseif contains(cur_metadata.Paradigm, "RC")
         extract_features_RC(config, file_name)    
-    elseif contains(cur_metadata.Protocol, "single")
+    elseif contains(cur_metadata.Paradigm, "Single")
         extract_features_singlePulse(config, file_name)
     else
         extract_features(config, file_name)
     end
 end
 
-%% Create feature table for further analysis
+% Create feature table for further analysis
 disp(repmat('=', 1, 100))
 disp('Create a table for MEP features')
+
+config = make_config(dir_root);
 create_feature_table(config)
 
-disp(repmat('=', 1, 100))
 toc
 diary off
 

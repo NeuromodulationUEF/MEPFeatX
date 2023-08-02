@@ -1,0 +1,42 @@
+---
+title: "repetition suppresion analysis"
+output: html_notebook
+---
+ 
+```{r create dir}
+path_stat_RS <- paste(path_stat, day_of_analysis, "RS", sep = '/')
+
+if (!dir.exists(path_stat_RS)) {
+  dir.create(path_stat_RS)
+}
+```
+
+```{r}
+# 
+RS_table <- features_table |>
+  filter(Paradigm == 'RS' & PulseOrder %in% c("1", "2", "3", "4")) |>
+  select(PulseGroup, PulseOrder, Amplitude, Latency, T1T, Duration, AUC, Thickness, ampRatio, nTurns, timeDiff)
+
+RS_medians <- RS_table |>
+  group_by(PulseOrder) |>
+  reframe(across(c(Amplitude, Latency, T1T, Duration, AUC, Thickness, ampRatio, nTurns, timeDiff), ~median(.x[.x>0], na.rm = TRUE)))
+
+write_xlsx(RS_medians, path = paste(path_stat_RS, '/RS_medians.xlsx', sep = ''), col_names = TRUE)
+```
+
+```{r}
+for(f in features) {
+  RS_table |>
+    ggplot(mapping = aes(x = PulseOrder, y = .data[[f]], group = PulseOrder)) +
+    geom_violin(alpha = 0.1, na.rm = TRUE) +
+    geom_dotplot(binaxis = "y", stackdir = "center", dotsize = 0.2, fill = "transparent") +
+    stat_summary(aes(y = .data[[f]], group = 1), fun.y = median, geom='line', color = 'red') +
+    stat_summary(fun = median, geom='point', size = 2, color = 'red')
+  
+  ggsave(filename = paste(f, ".png", sep = ''),
+         path = path_stat_RS,
+         bg = 'white')
+}
+```
+
+

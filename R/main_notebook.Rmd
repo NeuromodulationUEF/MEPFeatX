@@ -1,0 +1,70 @@
+---
+title: "MEPFeatX - main"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+chunk_output_type: console
+---
+
+First, load all required libraries
+
+
+```{r required libraries}
+required_libraries <- c(
+  "readxl",
+  "writexl",
+  "tidyverse",
+  "easystats",
+  "ggplot2"
+  )
+```
+
+
+```{r install required libraries}
+# for (lib in required_libraries){
+#   lapply(lib, install.packages)
+# }
+```
+
+```{r load required libraries}
+for (lib in required_libraries){
+  lapply(lib, library, character.only = TRUE)
+}
+```
+
+```{r set parameters}
+path_analysis <- gsub("\\\\", "/", "F:\\MEPFeatX\\analysis_20230801")
+path_stat <- paste(path_analysis, "stat", sep = '/')
+day_of_analysis <- format(Sys.Date(), "%Y%m%d")
+if (!dir.exists(paste(path_stat, day_of_analysis, sep = '/'))) {
+  dir.create(paste(path_stat, day_of_analysis, sep = '/'))
+}
+
+features <- c("Amplitude", "Latency", "T1T", "AUC", "Duration","Thickness", "ampRatio", "nTurns", "timeDiff")
+theme_set(theme_bw())
+
+```
+
+```{r load feature table}
+features_table <- read_xlsx(paste(path_stat, 'features_table.xlsx', sep = '/'))
+features_table <- features_table |>
+  mutate(Paradigm = recode(Paradigm, 'single pulse'='single'))
+head(features_table)
+```
+
+```{r run RS and RC analysis by scripts}
+rmarkdown::render('analyze_RS.Rmd', quiet = TRUE)
+rmarkdown::render('analyze_recruitment_curve.Rmd', quiet = TRUE)
+```
+
+
+```{r analyze LICI}
+LICI_table <- features_table |>
+  filter(Paradigm == 'LICI' & PulseOrder %in% c("1", "2")) |>
+  select(PulseGroup, PulseOrder, Amplitude, Latency, T1T, Duration, AUC, Thickness, ampRatio, nTurns, timeDiff)
+
+# The responses to the test pulse (the second pulse) were totally inhibited. Thus, here we study only the conditioning pulse
+
+LICI_table |> filter(PulseOrder == 1) |> select(-c(PulseGroup, PulseOrder)) |> report()
+```
+

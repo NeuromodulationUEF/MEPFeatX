@@ -1,0 +1,70 @@
+---
+title: "recruitment curve analysis"
+output: html_notebook
+---
+
+```{r create dir}
+path_stat_RC <- paste(path_stat, day_of_analysis, "RC", sep = '/')
+
+if (!dir.exists(path_stat_RC)) {
+  dir.create(path_stat_RC)
+}
+```
+
+```{r}
+features_table |> filter(Paradigm=='RC') |> select(c(1:8)) |> distinct()
+RC_table <- features_table |> filter(Paradigm=='RC') |> select(c(9, 12:24))
+
+RC_medians <- RC_table |> group_by(SI) |> reframe(across(c(1:13), ~mean(.x, na.rm = TRUE)))
+
+write_xlsx(RC_medians, path = paste(path_stat_RC, '/RC_medians.xlsx', sep = ''), col_names = TRUE)
+```
+
+```{r}
+for(f in features) {
+  RC_table |>
+    ggplot(mapping = aes(x = SI, y = .data[[f]], group = SI)) +
+    geom_boxplot(alpha = 0.1, na.rm = TRUE) +
+    geom_dotplot(binaxis = "y", stackdir = "center", dotsize = 0.2, fill = "transparent") +
+    stat_summary(aes(y = .data[[f]], group = 1), fun.y = median, geom='line', color = 'red') +
+    stat_summary(fun = median, geom='point', size = 2, color = 'red')
+  
+  ggsave(filename = paste(f, ".png", sep = ''),
+         path = path_stat_RC,
+         bg = 'white')
+}
+```
+
+
+```{r RC fitting}
+# RC fitting is applied only for Amplitude, with the assumption of using Boltzmann logistic function
+# 
+RC_est <- function(x, a, b, c, ydata){
+  return(b + (max(ydata)-min(ydata))/(1+c*exp(a*(120-x))))
+}
+
+model <-
+  nls(Amplitude ~ RC_est(SI, a, b, c, RC_medians$Amplitude),
+      data = RC_table,
+      start = list(a=0.12, b = 100, c = 0.8), 
+      algorithm = 'port',
+      lower = c(-1, -50, 0),
+      upper = c(1, 1000, 5))
+
+sink(paste(path_stat_RC, '/Boltzmann_log_model.txt', sep = ''))
+print(model)
+sink()
+df <- data.frame(SI = seq(90, 150, length.out = 1001))
+df$Amplitude<- predict(model, list(SI = df$SI))
+
+RC_table |>
+  ggplot(mapping = aes(x = SI, y = Amplitude)) +
+  geom_point(shape = 'o')+
+  geom_point(data = RC_medians, aes(x=SI, y = Amplitude), color = 'blue', size = 2) +
+  geom_point(data = df, aes(x=SI, y = Amplitude), color = 'red', size = 0.5)
+
+ggsave(filename = "0_RC_fitting.png",
+       path = path_stat_RC,
+       bg = 'white')
+
+```

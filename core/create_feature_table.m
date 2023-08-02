@@ -32,12 +32,13 @@ for k = 1:height(features_list)
        
     % load metadata of the session
     cur_metadata = metadata(contains(metadata.MEPs, file_name),:);
-    metadata2.Excluded{contains(metadata.MEPs, file_name)} = sprintf('%i,', find(isWrong));
+    metadata2.Excluded{contains(metadata.MEPs, file_name)} = sprintf('%i,', isWrong);
 
     cur_table = [repmat(cur_metadata, height(all_ft), 1), all_ft];
        
     features_table = [features_table; cur_table];
 end
+features_table = movevars(features_table, ["SI", "PulseGroup", "PulseOrder"], 'Before', 'Amplitude');
 
 %%
 invalid_amp = find(isnan(features_table.Amplitude) | features_table.Amplitude==0);
@@ -58,7 +59,7 @@ features_table.ampRatio(invalid_amp) = NaN;
 writetable(features_table, [config.path_stat 'features_table.xlsx'])
 writetable(metadata2, [config.path_stat 'metadata_updated.xlsx'])
 disp(['Feature table is created and save to ' config.path_stat])
-disp(['Metadata table is now updated with excluded MEPs: ' config.metadata])
+disp(['Metadata table is now updated with excluded MEPs: ' [config.path_stat 'metadata_updated.xlsx']])
 
 missed_trials = sum(features_table.Amplitude == 0 | isnan(features_table.Amplitude));
 fprintf('Percent of no-response trials: %d/%d = %.2f%% \n', ...

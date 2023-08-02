@@ -12,7 +12,7 @@ config.dir_root = dir_root;
 config.path_data = [dir_root 'data\'];
 
 td = char(datetime('today', 'Format', 'yyyyMMdd'));
-% td = '20230413';
+% td = '20230728';
 dirAnalysis        = [dir_root 'analysis_' td '\'];
 config.path_figures   = [dirAnalysis 'figures\'];
 config.path_features = [dirAnalysis 'features\'];
